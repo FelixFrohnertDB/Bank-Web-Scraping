@@ -4,7 +4,7 @@ import tabula
 import csv
 
 
-#Gehe in das Verzeichnis "filesSp" und wandel dort alle PDF Dat in csv Dat um. Die Struktur im Programm ist notwenidg, da es selten zu fehlern beim umwandeln kommt.
+#Go to the directory "filesSp" and convert all PDF files into csv files. The structure in the program is necessary, because it rarely comes to errors when converting.
 def makecsv():
     os.chdir("filesSp")
     files = [f for f in os.listdir('.') if os.path.isfile(f) and f.endswith('.pdf')]

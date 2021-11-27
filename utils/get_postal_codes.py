@@ -15,7 +15,7 @@ from openpyxl import load_workbook
 
 
 
-#Nimmt URL und gibt Liste mit bestimmten Datenpunkten der Seite zurück
+#Takes URL and returns list with specific data points of the page
 def get_data_sp(url,proxy=None):
     dataArraySp = np.array(["","",0,0,0,0],dtype="<U132")
     try:
@@ -23,7 +23,6 @@ def get_data_sp(url,proxy=None):
     except:
         response = False
     if str(response) != "<Response [200]>":
-        # Aus dem Print bekommt man relativ viel Info raus. Link: https://de.wikipedia.org/wiki/HTTP-Statuscode
         print("{0}This url didnt time work: {1}".format(str(response),url) )
         return np.array(["","",0,0,0,0])
     soup = BeautifulSoup(response.text, "html.parser")
@@ -85,7 +84,7 @@ def get_data_vr(url,proxy=None):
     return dataArrayVr
 
 #Hauptprogramm SPK. Kann sein, dass du geblockt wirst, durch das Threading werden viele Anfragen gestellt. In dem Fall nimmst du entweder Proxy oder wechselst zum 2.0 Progromm.
-def mainsp(proxy=None):
+def main_sp(proxy=None):
     #Datei mit URLS öffnen
     file = open("UrlSpFiliale.txt","r")
     #Workbook öffnen
@@ -130,7 +129,7 @@ def mainsp(proxy=None):
     return 0
 
 #Non Thread Version
-def mainsp2(proxy=None):
+def main_sp_2(proxy=None):
     file = open("UrlSpFiliale.txt","r")
     cnt = 6
     wb = load_workbook("Postalcode Tool.xlsm", read_only=False, keep_vba=True)
@@ -165,11 +164,7 @@ def mainsp2(proxy=None):
     return 0
 
 
-
-
-#########
-#Bei den VR Banken hatte ich mit Threading bis jetzt keine Probleme, ggf. muss hier auch eine 2.0 Version erstellt werden.
-def mainvr(proxy=None):
+def main_vr(proxy=None):
     file = open("UrlVrFiliale.txt","r")
     wb = load_workbook("Postalcode Tool.xlsm", read_only=False, keep_vba=True)
     sheet = wb[wb.sheetnames[2]]
@@ -193,7 +188,7 @@ def mainvr(proxy=None):
     file.close()
     wb.save("Postalcode Tool.xlsm")
     return 0
-#print(mainvr())
+
 
 
 if __name__ == "__main__":

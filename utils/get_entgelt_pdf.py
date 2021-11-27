@@ -12,14 +12,14 @@ import PyPDF2
 import re
 
 
-#Laden der Preisaushänge der Sparkassen.
-def getPreisaushangPDF():
+#Loading of the price notices of SP.
+def get_preisaushang_pdf_sp():
     #URL der Filiale mit Pfad zu den Infos öffnen
-    file = open("UrlSpEntgelt.txt","r")
+    file = open("url_sp_entgelt.txt","r")
     #Für den Tag des Entgeltes öffnen
-    file2 = open("UrlSpInstitut.txt","r")
+    file2 = open("url_sp_Institut.txt","r")
     cnt = 0
-    for num in range(len( open(   "UrlSpEntgelt.txt").readlines(    )  ) ):
+    for num in range(len( open(   "url_sp_entgelt.txt").readlines(    )  ) ):
         url = file.readline().replace('\n','')
         address = file2.readline().replace('\n','')
         name = address[11:-4].replace(".","")
@@ -48,12 +48,12 @@ def getPreisaushangPDF():
 
 
 #Laden der Entgeltinformationen von Sparkassen
-def getEntgelteSp():
-    file = open("UrlSpEntgelt.txt","r")
-    file2 = open("UrlSpInstitut.txt","r")
+def get_entgelt_sp():
+    file = open("url_sp_entgelt.txt","r")
+    file2 = open("url_sp_Institut.txt","r")
 
     cnt = 0
-    for num in range(len( open(   "UrlSpEntgelt.txt").readlines(    )  ) ):
+    for num in range(len( open(   "url_sp_entgelt.txt").readlines(    )  ) ):
         url = file.readline().replace('\n','')
         address = file2.readline().replace('\n','')
 
@@ -117,7 +117,7 @@ def getEntgelteSp():
 
 
 
-    print("With ",len(open("UrlSpEntgelt.txt").readlines()),"Websites",cnt, "PDF were collected")
+    print("With ",len(open("url_sp_entgelt.txt").readlines()),"Websites",cnt, "PDF were collected")
     file.close()
     file2.close()
 
@@ -128,7 +128,7 @@ def getEntgelteSp():
 
 
 #Alte Funktion um Überblick der Kontobezeichnungne SPK zu bekommen
-def getName():
+def get_name():
     wb = load_workbook("test.xlsx")
     sheet = wb[wb.sheetnames[0]]
     cnt = 1
@@ -177,7 +177,7 @@ def getName():
 ###Volksbanken###
 
 
-def getPreisaushangPDFVR():
+def get_preisaushang_pdf_vr():
     #Wechsel in das richtige Verzeichnis
     os.chdir("filesVr")
     #Alle PDF Dateien in eine Liste schreiben

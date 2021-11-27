@@ -17,14 +17,14 @@ import re
 
 
 
-#Die Funktion die Daten aus den PDF Dat. der SPK zu bekommen ist noch nicht implementiert.
-# Den Namen der Konten und den TAG bekommt man direkt aus dem Namen der PDF.
-# Was implementiert werden muss ist ein Alg. der die Tabellen ausliest und Preispunkte mit den Bezechnungen in den Dat. herausfiltert.
-#Die Begriffe sind, so wie ich das bis jetzt geseshen habe, nicht identisch mit denen der VRB, es kann sich aber gut daran orientiert werden.
+#The function to get the data from the PDF data of the SPK is not yet implemented.
+# The name of the accounts and the TAG is obtained directly from the name of the PDF.
+# What needs to be implemented is an alg. that reads the tables and filters out price points with the invoices in the dat.
+#The terms are, as I have seen so far, not identical to those of the VRB, but it can be well oriented.
 
 ###Sparkassen###
 
-def getNameSp(file):
+def get_name_sp(file):
     #os.chdir("filesSp")
     pdfFileObj = open(file, 'rb')
     pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
@@ -43,7 +43,7 @@ def getNameSp(file):
     return 0
 #print(getNameSp("kasseler-sparkassegirokomfort.pdf"))
 
-def getcontentPdfSp(file):
+def get_content_pdf_sp(file):
     pdfFileObj = open(file, 'rb')
     pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
     for page in range(pdfReader.numPages):
@@ -76,7 +76,7 @@ def mainSp():
 ###Volksbanken###
 
 #Funktion schreibt alle Namen von Konten aus einer PDF Datei heraus und gibt zusätzlich die Seite auf der der Name gefunden wurde an
-def getName(file):
+def get_name(file):
     #os.chdir("filesVr")
     end = False
     names = []
@@ -92,7 +92,7 @@ def getName(file):
 
 
 #Take file and return iter name of account.
-def findNameInPdf(file,iter):
+def get_name_in_pdf(file,iter):
     #Öffne PDF
     pdfFileObj = open(file, 'rb')
     pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
@@ -132,7 +132,7 @@ def findNameInPdf(file,iter):
 
 
 #Findet den Start einer Preisangabe in der PDF Datei
-def findStart(content):
+def find_start(content):
     #Mit KOntoführung beginnt die Preisanagebe immer
     if "Kontoführung" in content:
         #dann muss ich jedoch zwischen verschiedenen Fällen unterscheiden
@@ -159,7 +159,7 @@ def findStart(content):
 
 #Die Preisangabe endet mit der Angabe einer Einheit. "\u20ac" ist das Euro Symbol.
 #Ein Problem was ich hier noch überprüfen muss ist, ob diese Funktion nicht zu weit geht. Also ob ich wirklich die erste Einheitsangabe treffe und so den richtigen Preis herausfiltere.
-def findEnd(content,start):
+def find_end(content,start):
     if "EUR" in content:
         return content[start:].find("EUR")
     elif "Euro" in content:
@@ -171,7 +171,7 @@ def findEnd(content,start):
 
 
 #Zahl aus String schreiben die in einem bestimmten Format ist, z.b. X.X wobei X beliebige Dezimalzahlen sind
-def findNum(str):
+def find_num(str):
     cont = str.replace(",",".")
     try:
         return re.findall("\d+\.\d+",cont)[0]
@@ -191,7 +191,7 @@ def findNum(str):
 
 
 #Funktion die Content einer PDF Datei nimmt, implementiert durch pageObj.extractText().
-def getcontentPdfVr(file,currentPage,nextPage):
+def get_content_pdf_vr(file,currentPage,nextPage):
     #os.chdir("filesVr")
     pdfFileObj = open(file, 'rb')
     pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
@@ -225,7 +225,7 @@ def getcontentPdfVr(file,currentPage,nextPage):
 
 
 #Teilweise sind die PDF Dateien falsch formatiert von den Banken hochgeladen worden. Dann nehme ich die rechenaufwändigere CSV methode um die Preise zu bekommen
-def getcontentCsvVr(file,currentPage,nextPage):
+def get_content_csv_vr(file,currentPage,nextPage):
     #os.chdir("filesVr")
     # Wenn ich nur noch eine Seite übrig habe
     if currentPage == nextPage:
@@ -272,7 +272,7 @@ def getcontentCsvVr(file,currentPage,nextPage):
 
 
 #Alte FUnktion
-def mainvr():
+def main_vr():
     wb = load_workbook("EntgeltinformationVr.xlsx")
     sheet = wb[wb.sheetnames[0]]
     os.chdir("filesVr")
@@ -313,7 +313,7 @@ def mainvr():
     return 0
 
 
-def extractData(file):
+def extract_data(file):
     #os.chdir("filesVr")
     #print("Curretnly using this file:",file)
     # if isEmpty(file.replace(".pdf",".csv")) :
@@ -359,7 +359,7 @@ def extractData(file):
 #Die Funktion ist logisch in 2 Teile aufzusplitten. Einmal schreibe ich aus der Excel alle pdf Tags raus.
 #Dann gehe ich die Liste der Entgelt PDFS durch und streiche die welche in der Tag List sind raus
 #So bleiben dann nur die PDFS übrig welche noch nicht in der Excel sind.
-def removeElement(listPdf,sheet):
+def remove_element(listPdf,sheet):
     isIn = []
     end = False
     cnt = 2
@@ -391,7 +391,7 @@ def removeElement(listPdf,sheet):
 
 #Eigentliche Funktion. Ich threade das herauszuschreiben, deshalb ist die CPU vom PC sehr ausgelastet wenn du das Programm laufen lässt.
 #Man kann hier statt threading sicherlich auch multi-proccessing (https://www.machinelearningplus.com/python/parallel-processing-python/) viel an Rechenleistung rausholen.
-def mainvrThread():
+def main_vr_Thread():
     wb = load_workbook("EntgeltinformationVr.xlsx")
     sheet = wb[wb.sheetnames[0]]
     os.chdir("filesVr")
