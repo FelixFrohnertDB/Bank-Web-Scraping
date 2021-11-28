@@ -6,17 +6,17 @@ from openpyxl import load_workbook
 import traceback
 import os
 import time
-import tabula
+
 import csv
-import PyPDF2
+
 import re
 
 
 # Function that writes the commercial register information in CSV file
-def main_handels_vr(url_txt):
+def main_handels_vr(url_txt, save_as):
     # "UrlVrInstitute.txt"
     file = open(url_txt, "r")
-    file2 = open("commercial_register_vr.csv", "w+")
+    file2 = open(save_as, "w+")
     cnt = 0
     for num in range(len(open(url_txt).readlines())):
         url = file.readline().replace('\n', '')

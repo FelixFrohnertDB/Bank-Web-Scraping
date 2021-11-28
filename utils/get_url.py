@@ -4,20 +4,13 @@ from bs4 import BeautifulSoup
 import concurrent.futures
 import urllib.request
 import numpy as np
-import time
-import pandas as pd
-import json
-import os
-import traceback
-from openpyxl import workbook
-from openpyxl import load_workbook
 
 
 # Takes letter as string and returns list of urls of stores in locations with the letter. Link:
 # https://www.sparkasse.de/service/filialsuche.html The proxy variable can be used to specify an IP address which
 # allows access to websites if the own IP is blocked.
 
-def get_url_sp(letter, proxy=None):
+def get_url_sp_letter(letter, proxy=None):
     response = requests.get("https://www.sparkasse.de/filialen/" + letter + ".html", proxy)
     # Parse the HTML content of the page with the bs4 library to work with it. Doc:
     # https://www.crummy.com/software/BeautifulSoup/bs4/doc/
@@ -32,7 +25,7 @@ def get_url_sp(letter, proxy=None):
     return url_list
 
 
-def get_url_vr(letter, proxy=None):
+def get_url_vr_letter(letter, proxy=None):
     response = requests.get("https://www.vr.de/service/filialen-a-z/" + letter + ".html", proxy)
     soup = BeautifulSoup(response.text, "html.parser")
     href = soup.findAll('a', 'more-info')
@@ -52,31 +45,32 @@ def get_url_vr(letter, proxy=None):
 # to keep the main program shorter, then only the lines must be read in and I save the time to wait for the creation
 # of the URL lists at each execution.
 
-def url_to_txt(input_str, save_as, proxy):
-    if "Vr" in input_str:
-        file = open(save_as, "w+")
-        alphabet = ["a", "ba-bm", "bn-Bz", "c", "d", "e", "f", "g", "ha-hm", "hn-hz", "i", "j", "k", "l", "m", "n", "o",
-                    "p", "q", "r", "sa-sm", "sn-sz", "t", "u", "v", "wa-wm", "wn-wz", "x", "y", "z"]
-        for i in alphabet:
-            arr = get_url_vr(i, proxy)
-            for url in arr:
-                file.write("{}\n".format(url))
-    elif "Sp" in input_str:
-        file = open(save_as, "w+")
-        alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t",
-                    "u", "v", "w", "x", "y", "z"]
-        for i in alphabet:
-            arr = get_url_sp(i, proxy)
-            for url in arr:
-                file.write("{}\n".format(url))
-    else:
-        return 0
+def get_url_sp(save_as, proxy):
+    file = open(save_as, "w+")
+    alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t",
+                "u", "v", "w", "x", "y", "z"]
+    for i in alphabet:
+        arr = get_url_sp_letter(i, proxy)
+        for url in arr:
+            file.write("{}\n".format(url))
     file.close()
-    return 0
+    return 1
+
+
+def get_url_vr(save_as, proxy):
+    file = open(save_as, "w+")
+    alphabet = ["a", "ba-bm", "bn-Bz", "c", "d", "e", "f", "g", "ha-hm", "hn-hz", "i", "j", "k", "l", "m", "n", "o",
+                "p", "q", "r", "sa-sm", "sn-sz", "t", "u", "v", "wa-wm", "wn-wz", "x", "y", "z"]
+    for i in alphabet:
+        arr = get_url_vr_letter(i, proxy)
+        for url in arr:
+            file.write("{}\n".format(url))
+    file.close()
+    return 1
 
 
 # On Wikipedia there are entries for all institutions of the Sparkasse with links to the website of the institution.
-def get_url_list_wiki():
+def get_url_sp_institute_temp():
     response = requests.get("https://de.wikipedia.org/wiki/Liste_der_Sparkassen_in_Deutschland")
     soup = BeautifulSoup(response.text, "html.parser")
     href = soup.findAll('td')
@@ -96,12 +90,12 @@ def get_url_list_wiki():
 # the institute is written out. In addition, I directly create a list for the charge information, since with the
 # savings banks the URL always contains the same path.
 
-def get_url_sp_institute(array):
-    file = open("UrlSpEntgelt.txt", "w+")
-    file2 = open("UrlSpInstitut.txt", "w+")
+def get_url_sp_institute(url_arr, save_as_entgelt, save_as_institute):
+    file = open(save_as_entgelt, "w+")
+    file2 = open(save_as_institute, "w+")
     cnt = 0
-    cntarr = len(array)
-    for url in array:
+    cntarr = len(url_arr)
+    for url in url_arr:
         response = requests.get(url)
         soup = BeautifulSoup(response.text, "html.parser")
         # Ich filtere nach dem "a" Tag mit den Attributen "rel" und "class" mit den jeweilingen Werten.
@@ -120,13 +114,14 @@ def get_url_sp_institute(array):
     return 0
 
 
-# With the VR banks this does not go unfortunately so simply, here I call all sides of the branches and write me so the linking out.
-# This is inefficient, but goes because I can simply thread, clear from the runtime.
-def get_url(url):
+# With the VR banks this does not go unfortunately so simply, here I call all sides of the branches and write me so
+# the linking out. This is inefficient, but goes because I can simply thread, clear from the runtime.
+def get_url_vr_institute_temp(url):
     try:
         response = requests.get(url)
     except:
-        # Ggf überprüfen, da es aber von jedem Institut mehrere Filialen gibt ist die wahrscheinlichkeit, dass man ein ganzes Institut nicht mitbekommt gering.
+        # Ggf überprüfen, da es aber von jedem Institut mehrere Filialen gibt ist die wahrscheinlichkeit,
+        # dass man ein ganzes Institut nicht mitbekommt gering.
         print("Cant connect", url)
         # traceback.print_exc()
         # print("Didnt work: ",url)
@@ -147,26 +142,24 @@ def get_url(url):
 list = []
 
 
-def get_url_vr_institute():
-    file = open("url_vr_filiale.txt", "r")
-    file2 = open("url_vr_institut.txt", "w+")
+def get_url_vr_institute(url_filiale_txt, save_as_institute):
+    file = open(url_filiale_txt, "r")
+    file2 = open(save_as_institute, "w+")
 
-    url_list = [0] * len(open("url_vr_filiale.txt").readlines())
-    for i in range(len(open("url_vr_filiale.txt").readlines())):
+    url_list = [0] * len(open().readlines())
+    for i in range(len(open(url_filiale_txt).readlines())):
         url_list[i] = file.readline().replace('\n', '')
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        future_to_url = {executor.submit(getUrl, url): url for url in url_list}
+        future_to_url = {executor.submit(get_url_vr_institute_temp, url): url for url in url_list}
         for future in concurrent.futures.as_completed(future_to_url):
             result = future.result()
-            # Wenn Fehler in der getUrl Funktion
             if result == 1:
                 continue
-            # Wenn das Institut noch nicht in der Liste ist
             if result not in list:
                 list.append(result)
                 file2.write("{0}\n".format(result))
-                # print(len(list))
+
     file.close()
     file2.close()
     return 0
