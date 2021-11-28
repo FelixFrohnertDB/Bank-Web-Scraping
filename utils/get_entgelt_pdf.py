@@ -162,24 +162,34 @@ def get_name():
 
 
 def get_preisaushang_pdf_vr(institut_txt, save_as):
+    url_list = get_temp_url(institut_txt)
+    get_temp_pdf(url_list, save_as)
+    return 0
+
+
+def get_temp_url(institut_txt):
     file = open(institut_txt, "r")
-    iter = 0
+
+    url_list = []
     for num in range(len(open(institut_txt, "r").readlines())):
 
         url = file.readline().replace("\n", "")
-        if num < iter:
+        if url == "":
             continue
-        end = url.find(".de")
-        if url[:5] == "https":
-            name = url[12:end]
-        else:
-            name = url[11:end]
-
 
         found = False
         cnt = 0
-        # Super uneffizient, hier findet man zu 100% eine bessere Möglichkeit. Ich hatte nur keine Zeit mehr. Die URL Anhänge sind wenigstens schon nach wichtigkeit sortiert.
-        tryAr = ['/service/rechtliche-hinweise/pflichtinformationen/entgeltinformationen.html',
+
+        tryAr = ["/service/rechtliche-hinweise/pflichtinformationen/entgeltinformationen.html",
+            "/service/rechtliche-hinweise/pflichtinformationen/entgeltinformationen.html",
+"/service/rechtliche-hinweise/pflichtinformationen/entgeltinformationen.html",
+"/service/rechtliche-hinweise/pflichtinformationen/entgeltinformationen.html",
+            "/service/rechtliche-hinweise/pflichtinformationen_osogs.html",
+                 "/service/rechtliche-hinweise/pflichtinformationen/entgeltinformationen.html",
+                 "/service/rechtliche-hinweise/pflichtinformationen.html",
+                 "/service/rechtliche-hinweise/pflichtinformationen/entgeltinformationen.html",
+                 "/service/rechtliche-hinweise/pflichtinformationen/entgeltinformationen.html",
+                 '/service/rechtliche-hinweise/pflichtinformationen/entgeltinformationen.html',
                  '/Service/rechtliche-hinweise/pflichtinformationen.html',
                  '/service/rechtliche-hinweise/Pflichtinformationen/entgeltinformationen.html',
                  '/service/pflichtinformationen/entgeltinformationen.html',
@@ -211,37 +221,44 @@ def get_preisaushang_pdf_vr(institut_txt, save_as):
                  '/service/informationspflicht/zahlungskontengesetz.html',
                  '/rechtliches/pflichtinformationen/entgeltinformationen.html']
 
-        try:
-            while not found:
-                # print("this url",url)
-                tryUrl = url + tryAr[cnt]
-                response = requests.get(tryUrl)
-                # print("trying",url+tryAr[cnt])
-                if str(response) != "<Response [200]>":
-                    cnt += 1
-                else:
-                    found = True
+        while not found and cnt <= len(tryAr):
+            # print("this url",url)
+            tryUrl = url + tryAr[cnt]
+
+            response = requests.get(tryUrl)
+            # print("trying",url+tryAr[cnt])
+            if str(response) != "<Response [200]>":
+                cnt += 1
+            else:
+                url_list.append(tryUrl)
+                found = True
+    return url_list
 
 
-        except:
-            traceback.print_exc()
-            print("No success with current tryAr", name)
-            print(num)
-            continue
+def get_temp_pdf(url_list, save_as):
+    for url in url_list:
+        end = url.find(".de")
+        if url[:5] == "https":
+            name = url[12:end]
+        else:
+            name = url[11:end]
 
-        # suche nach den selben tags wie oben, wenn dann mehr als einer drin ist engage in das neue, sonst standard abgreifen
+        response = requests.get(url)
+
         soup = BeautifulSoup(response.text, "html.parser")
+
         href = soup.findAll('a', href=re.compile("ntgeltinfo"))  # ,'target':'_blank'})
 
-        # In jeder Iteration wird found aus falsch gesetzt
         foundEnt = False
 
         for i in href:
 
             # Zwischen den beiden Punkten sollte die Bezeichnung des Kontos liegen.
             start = i.get('href').find('ntgeltinfo')
-            end = i.get('href').find('.pdf?')
-            # Bei VR Banken sind die Entgeltinfos entweder zusammengefasst in einer Datei oder einzeln auf den Websites. Im gesammelten Fall ist len(href)==1 und ich gebe den passenden Namen. Sonst ist der Algorithmus der selbe wie auch bei SPK.
+            end = i.get('href').find('.pdf')
+
+            # Bei VR Banken sind die Entgeltinfos entweder zusammengefasst in einer Datei oder einzeln auf den
+            # Websites. Im gesammelten Fall ist len(href)==1 und ich gebe den passenden Namen.
             if len(href) == 1:
                 accountName = "kombiniert"
             else:
@@ -252,19 +269,18 @@ def get_preisaushang_pdf_vr(institut_txt, save_as):
                 address = str(i.get('href'))
                 if address[:4] != "http":
                     address = url + address
-
+                print(accountName, address, "\n")
                 # Daten der PDF Datei abrufen
                 data = requests.get(address, allow_redirects=True)
                 # PDF content in das Verzeichnis schreiben.
                 # Ich habe mich für "qq" als Trennung zwischen Tag und Name des Kontos entschieden, da die Kombination von Buchstaben an sich nicht natürlich auftreten sollte.
-                open(save_as +'{}.pdf'.format(name + "qq" + accountName), 'wb').write(data.content)
+                open(save_as + '{}.pdf'.format(name + "_" + accountName), 'wb').write(data.content)
                 foundEnt = True
-                cnt += 1
+
             except:
                 traceback.print_exc()
 
             if not foundEnt:
                 print("not found", name)
 
-    file.close()
     return 0

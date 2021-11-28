@@ -80,43 +80,4 @@ def get_data_vr(url, proxy=None):
     return dataArrayVr
 
 
-# Hauptprogramm SPK. Kann sein, dass du geblockt wirst, durch das Threading werden viele Anfragen gestellt. In dem
-# Fall nimmst du entweder Proxy oder wechselst zum 2.0 Progromm.
-
-
-
-# Non Thread Version
-def main_sp_2(proxy=None):
-    file = open("UrlSpFiliale.txt", "r")
-    cnt = 6
-    wb = load_workbook("Postalcode Tool.xlsm", read_only=False, keep_vba=True)
-    sheet = wb[wb.sheetnames[1]]
-    lenUrl = len(open("UrlSpFiliale.txt").readlines())
-    for iter in range(lenUrl):
-
-        data = get_data_sp(file.readline().replace('\n', ''))
-
-        try:
-            sheet.cell(row=cnt, column=1).value = data[0]
-            sheet.cell(row=cnt, column=2).value = data[1]
-            sheet.cell(row=cnt, column=3).value = float(data[2])
-            sheet.cell(row=cnt, column=5).value = float(data[3])
-            sheet.cell(row=cnt, column=4).value = float(data[4])
-            # BLZ
-            sheet.cell(row=cnt, column=7).value = float(data[5])
-            cnt += 1
-
-        except:
-            traceback.print_exc()
-            continue
-        print(lenUrl - cnt)
-        if "00" in str(cnt):
-            print("save")
-            # Zwischenstand speichern
-            wb.save("Postalcode Tool.xlsm")
-
-    wb.save("Postalcode Tool.xlsm")
-    file.close()
-    return 0
-
 
